@@ -1,0 +1,30 @@
+cabal-version:       2.2
+
+name:                xia
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/Oleksii-Kshenskyi/xia#readme
+license:             MIT
+license-file:        LICENSE
+author:              Oleksii Kshenskyi
+maintainer:          archalessus@gmail.com
+copyright:           2024 Oleksii Kshenskyi
+category:            Compilers
+build-type:          Simple
+extra-source-files:  README.md
+
+executable xia
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+  ghc-options:         -Wall
+                       -Wcompat
+                       -Widentities
+                       -Wincomplete-record-updates
+                       -Wincomplete-uni-patterns
+                       -Wmissing-export-lists
+                       -Wmissing-home-modules
+                       -Wpartial-fields
+                       -Wredundant-constraints
