@@ -3,11 +3,9 @@
 module Main (main) where
 
 import Data.Text as T
-import Data.Text.IO as I
-
-testText :: T.Text
-testText = "Text wroks!!1"
+import Parse as P
 
 main :: IO ()
 main = do
-    I.putStrLn testText
+    print $ P.digit $ T.pack "KEKW"
+    print $ P.digit $ T.pack "1kek"
