@@ -7,7 +7,11 @@ import Parse
 
 -- Goal is to parse "let var = (3 + 5) * 7" for now
 testExpr :: Text
-testExpr = T.pack " 3 + 5"
+testExpr = T.pack "10 / 10"
+
+leftT :: [(a, b)] -> Maybe a
+leftT [(x, _)] = Just x
+leftT _ = Nothing
 
 main :: IO ()
 main = do
@@ -28,6 +32,10 @@ main = do
     print $ whitespaces $ T.pack "\n666"
     print $ whitespaces $ T.pack "\r666"
     print $ whitespaces $ T.pack "      KEKW "
-    print $ whitespaces <* many digit $ T.pack "  66  "
+    print $ whitespaces >> number $ T.pack "  77  "
     print $ binaryOp $ T.pack "-cc"
-    print $ binaryExpr testExpr
+    print $ many digit $ T.pack "6b"
+    print $ many (satisfy (myIsJust . charToBinaryOp)) $ T.pack "n+kes"
+    print $ evalExpr <$> leftT (binaryExpr testExpr)
+
+    -- print $ test $ T.pack ""

@@ -2,7 +2,7 @@ module Eval (
 
 ) where
 
-import Parse
-
+import Parse (Parser, BinaryExpression, BinaryOpType)
+    
 
 

@@ -1,16 +1,24 @@
 module Parse (
     Parser,
+    BinaryExpression,
+    BinaryOpType,
     digit,
-    many,
+    many, many1, (<|>),
     number,
     whitespaces,
     binaryOp,
     binaryExpr,
+    charToBinaryOp,
+    satisfy,
+    myIsJust,
+    charP,
+    evalExpr,
 ) where
 
 import Data.Char as C
 import Data.Text as T
 import Prelude as P
+import Data.List as L
 
 type Parser a = T.Text -> [(a, T.Text)]
 
@@ -20,6 +28,19 @@ data BinaryOpType =
 
 data BinaryExpression = BinaryExpression Int BinaryOpType Int
     deriving Show
+
+isChar :: Char -> Bool
+isChar _ = True
+charP :: Parser Char
+charP = satisfy isChar
+
+pureP :: a -> Parser a
+pureP x input = [(x, input)]
+
+myIsJust :: Maybe a -> Bool
+myIsJust m = case m of
+    Just _ -> True
+    Nothing -> False
 
 satisfy :: (Char -> Bool) -> Parser Char
 satisfy p input = case T.uncons input of
@@ -35,15 +56,13 @@ p1 <|> p2 = \input -> case p1 input of
 -- whitespace :: Parser ()
 -- whitespace (c, cs) = satisfy isSpace cs
 
-
-
 digit :: Parser Int
 digit input = case T.uncons input of
     Just (c, cs) | C.isDigit c -> [(C.digitToInt c, cs)]
     _ -> []
 
 many :: Parser a -> Parser [a]
-many p = many1 p <|> pure []
+many p = many1 p <|> pureP []
 
 many1 :: Parser a -> Parser [a]
 many1 p input = case p input of
@@ -69,7 +88,7 @@ whitespaces input = case many whitespace input of
 -- acc = 1 * 10 + 2 = 12
 -- acc = 12 * 10 + 3 = 123
 number :: Parser Int
-number input = case many digit input of
+number input = case many1 digit input of
     [(digits, rest)] -> [(P.foldl (\acc x -> acc * 10 + x) 0 digits, rest)]
     _ -> []
 
@@ -97,4 +116,11 @@ binaryExpr input = do
     (_, rest5) <- whitespaces rest4
     (op2, rest6) <- number rest5
     (_, rest7) <- whitespaces rest6
-    pure (BinaryExpression op1 opType op2, rest7)
+    pureP (BinaryExpression op1 opType op2) rest7
+
+evalExpr :: BinaryExpression -> Int
+evalExpr (BinaryExpression op1 opType op2) = case opType of
+        Plus -> op1 + op2
+        Minus -> op1 - op2
+        Multiply -> op1 * op2
+        Divide -> op1 `div` op2
