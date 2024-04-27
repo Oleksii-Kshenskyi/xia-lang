@@ -3,6 +3,9 @@ module Parse (
     digit,
     many,
     number,
+    whitespaces,
+    binaryOp,
+    binaryExpr,
 ) where
 
 import Data.Char as C
@@ -11,10 +14,28 @@ import Prelude as P
 
 type Parser a = T.Text -> [(a, T.Text)]
 
+data BinaryOpType =
+    Plus | Minus | Multiply | Divide
+    deriving Show
+
+data BinaryExpression = BinaryExpression Int BinaryOpType Int
+    deriving Show
+
+satisfy :: (Char -> Bool) -> Parser Char
+satisfy p input = case T.uncons input of
+    Just (c, cs) | p c -> [(c, cs)]
+    _ -> []
+
+-- choice operator
 (<|>) :: Parser a -> Parser a -> Parser a
 p1 <|> p2 = \input -> case p1 input of
     [] -> p2 input
     success -> success
+
+-- whitespace :: Parser ()
+-- whitespace (c, cs) = satisfy isSpace cs
+
+
 
 digit :: Parser Int
 digit input = case T.uncons input of
@@ -33,6 +54,16 @@ many1 p input = case p input of
         [] -> [([x], rest)]
         parsed -> [(x : xs, moreRest) | (xs, moreRest) <- parsed]
 
+whitespace :: Parser ()
+whitespace input = case T.uncons input of
+    Just (c, cs) | isSpace c -> [((), cs)]
+    _ -> []
+
+whitespaces :: Parser ()
+whitespaces input = case many whitespace input of
+    [(_, rest)] -> [((), rest)]
+    _ -> []
+
 -- [1, 2, 3]
 -- acc = 0 * 10 + 1 = 1
 -- acc = 1 * 10 + 2 = 12
@@ -41,3 +72,29 @@ number :: Parser Int
 number input = case many digit input of
     [(digits, rest)] -> [(P.foldl (\acc x -> acc * 10 + x) 0 digits, rest)]
     _ -> []
+
+charToBinaryOp :: Char -> Maybe BinaryOpType
+charToBinaryOp c = case c of
+    '+' -> Just Plus
+    '-' -> Just Minus
+    '*' -> Just Multiply
+    '/' -> Just Divide
+    _ -> Nothing
+
+binaryOp :: Parser BinaryOpType
+binaryOp input = case T.uncons input of
+    Just (c, cs) -> case charToBinaryOp c of
+        Just bop -> [(bop, cs)]
+        Nothing -> []
+    _ -> []
+
+binaryExpr :: Parser BinaryExpression
+binaryExpr input = do
+    (_, rest) <- whitespaces input
+    (op1, rest2) <- number rest
+    (_, rest3) <- whitespaces rest2
+    (opType, rest4) <- binaryOp rest3
+    (_, rest5) <- whitespaces rest4
+    (op2, rest6) <- number rest5
+    (_, rest7) <- whitespaces rest6
+    pure (BinaryExpression op1 opType op2, rest7)
