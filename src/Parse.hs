@@ -55,6 +55,8 @@ isChar :: Char -> Bool
 isChar _ = True
 charP :: Parser Char
 charP = satisfy isChar
+char :: Char -> Parser Char
+char c = satisfy (== c)
 
 myIsJust :: Maybe a -> Bool
 myIsJust m = case m of
@@ -111,6 +113,12 @@ number = Parser $ \input -> case runParser (many1 digit) input of
     [(digits, rest)] -> [(P.foldl (\acc x -> acc * 10 + x) 0 digits, rest)]
     _ -> []
 
+charToUnaryOp :: Char -> Maybe UnaryOpType
+charToUnaryOp c = case c of
+    '+' -> Just UPlus
+    '-' -> Just UMinus
+    _ -> Nothing
+
 charToBinaryOp :: Char -> Maybe BinaryOpType
 charToBinaryOp c = case c of
     '+' -> Just Plus
@@ -126,6 +134,22 @@ binaryOp = Parser $ \input -> case T.uncons input of
         Nothing -> []
     _ -> []
 
+unaryOp :: Parser UnaryOpType
+unaryOp = Parser $ \input -> case T.uncons input of
+    Just (c, cs) -> case charToUnaryOp c of
+        Just uop -> [(uop, cs)]
+        Nothing -> []
+    _ -> []
+
+unaryExpr :: Parser Expression
+unaryExpr = do
+    whitespaces
+    opType <- unaryOp
+    whitespaces
+    op1 <- number
+    whitespaces
+    pure $ UnaryExpression opType (IntLiteral op1)
+
 binaryExpr :: Parser Expression
 binaryExpr = do
     whitespaces
@@ -137,5 +161,19 @@ binaryExpr = do
     whitespaces
     pure $ BinaryExpression (IntLiteral op1) opType (IntLiteral op2)
 
+literalExpr :: Parser Expression
+literalExpr = do
+    whitespaces
+    op1 <- number
+    whitespaces
+    pure $ IntLiteral op1
+
 parseExpr :: Parser Expression
-parseExpr = binaryExpr
+parseExpr = parenthesizedExpr <|> binaryExpr <|> unaryExpr <|> literalExpr
+
+parenthesizedExpr :: Parser Expression
+parenthesizedExpr = do
+    whitespaces *> char '(' *> whitespaces
+    expr <- parseExpr
+    whitespaces <* char ')' <* whitespaces
+    pure expr

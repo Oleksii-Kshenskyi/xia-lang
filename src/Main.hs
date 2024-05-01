@@ -10,10 +10,8 @@ import Eval
 -- Goal is to parse "let var = (3 + 5) * 7" for now
 -- #TODO: parsing single binary op with two numbers, now parse
 --       an expression with multiple binary ops.
--- #TODO: parse unary ops.
--- #TODO: parse parenthesized expressions.
 testExpr :: Text
-testExpr = T.pack "10*99 - 3"
+testExpr = T.pack "33-33"
 
 extractExpr :: [(a, b)] -> Maybe a
 extractExpr [(x, _)] = Just x
