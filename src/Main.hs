@@ -8,12 +8,16 @@ import Parse
 import Eval
 
 -- Goal is to parse "let var = (3 + 5) * 7" for now
+-- #TODO: parsing single binary op with two numbers, now parse
+--       an expression with multiple binary ops.
+-- #TODO: parse unary ops.
+-- #TODO: parse parenthesized expressions.
 testExpr :: Text
-testExpr = T.pack "10*99"
+testExpr = T.pack "10*99 - 3"
 
-leftT :: [(a, b)] -> Maybe a
-leftT [(x, _)] = Just x
-leftT _ = Nothing
+extractExpr :: [(a, b)] -> Maybe a
+extractExpr [(x, _)] = Just x
+extractExpr _ = Nothing
 
 main :: IO ()
 main = do
@@ -37,5 +41,5 @@ main = do
     print $ runParser whitespaces >> runParser number $ T.pack "  77  "
     print $ runParser binaryOp $ T.pack "-cc"
     print $ runParser (many digit) $ T.pack "6b"
-    print $ runParser (many (satisfy (myIsJust . charToBinaryOp))) $ T.pack "++kes"
-    print $ evalExpr <$> leftT (runParser binaryExpr testExpr)
+    print $ runParser (many $ satisfy (myIsJust . charToBinaryOp)) $ T.pack "++kes"
+    print $ evalExpr <$> extractExpr (runParser parseExpr testExpr)

@@ -1,8 +1,9 @@
 module Parse (
     Parser,
     runParser,
-    BinaryExpression(..),
+    Expression(..),
     BinaryOpType(..),
+    UnaryOpType(..),
     digit,
     many, many1, (<|>),
     number,
@@ -13,6 +14,7 @@ module Parse (
     satisfy,
     myIsJust,
     charP,
+    parseExpr,
 ) where
 
 import Data.Char as C
@@ -38,7 +40,15 @@ data BinaryOpType =
     Plus | Minus | Multiply | Divide
     deriving Show
 
-data BinaryExpression = BinaryExpression Int BinaryOpType Int
+data UnaryOpType =
+    UPlus
+    | UMinus
+    deriving Show
+
+data Expression =
+    IntLiteral Int
+    | UnaryExpression UnaryOpType Expression
+    | BinaryExpression Expression BinaryOpType Expression
     deriving Show
 
 isChar :: Char -> Bool
@@ -116,7 +126,7 @@ binaryOp = Parser $ \input -> case T.uncons input of
         Nothing -> []
     _ -> []
 
-binaryExpr :: Parser BinaryExpression
+binaryExpr :: Parser Expression
 binaryExpr = do
     whitespaces
     op1 <- number
@@ -125,4 +135,7 @@ binaryExpr = do
     whitespaces
     op2 <- number
     whitespaces
-    pure $ BinaryExpression op1 opType op2
+    pure $ BinaryExpression (IntLiteral op1) opType (IntLiteral op2)
+
+parseExpr :: Parser Expression
+parseExpr = binaryExpr
