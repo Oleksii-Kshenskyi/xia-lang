@@ -8,10 +8,10 @@ import Parse
 import Eval
 
 -- Goal is to parse "let var = (3 + 5) * 7" for now
--- #TODO: parsing single binary op with two numbers, now parse
---       an expression with multiple binary ops.
+-- #TODO: parsing single expression, now parse a recursive expr with
+--        multiple sub-exprs.
 testExpr :: Text
-testExpr = T.pack "33-33"
+testExpr = T.pack "100 * 48 - 8"
 
 extractExpr :: [(a, b)] -> Maybe a
 extractExpr [(x, _)] = Just x

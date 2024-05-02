@@ -82,17 +82,12 @@ digit = Parser $ \input -> case T.uncons input of
     Just (c, cs) | C.isDigit c -> [(C.digitToInt c, cs)]
     _ -> []
 
-many :: Parser a -> Parser [a]
+many, many1 :: Parser a -> Parser [a]
 many p = many1 p <|> pure []
-
-many1 :: Parser a -> Parser [a]
-many1 p = Parser $ \input -> case runParser p input of
-    [] -> []
-    toParse -> P.concatMap continueParsing toParse
-  where
-    continueParsing (x, rest) = case runParser (many p) rest of
-        [] -> [([x], rest)]
-        parsed -> [(x : xs, moreRest) | (xs, moreRest) <- parsed]
+many1 p = do
+    first <- p
+    rest <- many p
+    pure $ first:rest
 
 whitespace :: Parser ()
 whitespace = Parser $ \input -> case T.uncons input of
