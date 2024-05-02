@@ -104,9 +104,7 @@ whitespaces = Parser $ \input -> case runParser (many whitespace) input of
 -- acc = 1 * 10 + 2 = 12
 -- acc = 12 * 10 + 3 = 123
 number :: Parser Int
-number = Parser $ \input -> case runParser (many1 digit) input of
-    [(digits, rest)] -> [(P.foldl (\acc x -> acc * 10 + x) 0 digits, rest)]
-    _ -> []
+number = Parser $ runParser $ L.foldl (\acc x -> acc * 10 + x) 0 <$> many1 digit
 
 charToUnaryOp :: Char -> Maybe UnaryOpType
 charToUnaryOp c = case c of
