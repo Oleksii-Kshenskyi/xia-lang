@@ -1,39 +1,6 @@
 use crate::parse_utils::*;
 
 #[derive(Debug)]
-pub enum ArithmeticOp {
-    Add,
-    Subtract,
-    Multiply,
-    Divide,
-}
-
-impl ArithmeticOp {
-    pub fn from_str(op: &str) -> Option<Self> {
-        match op {
-            "+" => Some(ArithmeticOp::Add),
-            "-" => Some(ArithmeticOp::Subtract),
-            "*" => Some(ArithmeticOp::Multiply),
-            "/" => Some(ArithmeticOp::Divide),
-            _ => None,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum Token {
-    Int(u64),
-    ArithmeticOp(ArithmeticOp),
-    Borked(String),
-}
-
-impl Token {
-    pub fn from_int(int_str: &str) -> Token {
-        Token::Int(int_str.parse::<u64>().unwrap())
-    }
-}
-
-#[derive(Debug)]
 pub struct Lexer {
     code: String,
     pos: usize,
@@ -60,26 +27,86 @@ impl Lexer {
     pub fn next_token(&mut self) -> Token {
         self.skip_whitespaces();
 
-        let mut token_str = "".to_owned();
-        while let Some(c) = self.code.chars().nth(self.pos) {
-            if is_token_ender(self.code.chars().nth(self.pos - 1), &c) {
-                break;
-            }
-
-            token_str.push(c);
-            self.pos += 1;
-        }
-
-        let token = if token_str.chars().all(|c| c.is_digit(10)) {
-            Token::from_int(&token_str)
-        } else if is_arithmetic_op(&token_str) {
-            Token::ArithmeticOp(ArithmeticOp::from_str(&token_str).unwrap())
+        let token = if let Some(int_tok) = self.try_get_int() {
+            int_tok
+        } else if let Some(binary_op) = self.try_get_binary_op() {
+            binary_op
+        } else if let Some(paren) = self.try_get_paren() {
+            paren
         } else {
-            Token::Borked(token_str)
+            self.get_borked()
         };
 
         self.skip_whitespaces();
         token
+    }
+
+    fn consume_digit(&mut self) -> Option<char> {
+        let maybe_char = self.code.chars().nth(self.pos);
+        let maybe_digit = match maybe_char {
+            None => None,
+            Some(c) => match c.is_digit(10) {
+                true => Some(c),
+                false => None,
+            },
+        };
+        match maybe_digit {
+            None => return None,
+            Some(d) => {
+                self.pos += 1;
+                return Some(d);
+            }
+        }
+    }
+    fn try_get_int(&mut self) -> Option<Token> {
+        let mut num_str = "".to_owned();
+        while let Some(digit) = self.consume_digit() {
+            num_str.push(digit);
+        }
+
+        match num_str.is_empty() {
+            true => None,
+            false => Some(Token::from_int(&num_str)),
+        }
+    }
+
+    fn try_get_binary_op(&mut self) -> Option<Token> {
+        let maybe_char = self.code.chars().nth(self.pos);
+        match maybe_char {
+            Some(c) => match is_arithmetic_op(&c.to_string()) {
+                true => ArithmeticOp::from_str(&c.to_string()).map(|o| {
+                    self.pos += 1;
+                    Token::ArithmeticOp(o)
+                }),
+                false => None,
+            },
+            None => None,
+        }
+    }
+
+    fn get_borked(&mut self) -> Token {
+        let token_str = self
+            .code
+            .chars()
+            .take_while(|c| !c.is_whitespace())
+            .collect::<String>();
+        self.pos += token_str.len();
+
+        Token::Borked(token_str)
+    }
+
+    fn try_get_paren(&mut self) -> Option<Token> {
+        let maybe_char = self.code.chars().nth(self.pos);
+        match maybe_char {
+            None => None,
+            Some(c) => match is_paren(&c) {
+                false => None,
+                true => {
+                    self.pos += 1;
+                    Some(paren_token(&c))
+                }
+            },
+        }
     }
 
     fn skip_whitespaces(&mut self) {
