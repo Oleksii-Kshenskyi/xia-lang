@@ -1,3 +1,9 @@
+mod lexer;
+mod parse_utils;
+use lexer::Lexer;
+
+const CODE: &str = "3 + 3 - 2";
+
 fn main() {
-    println!("Hello, world!");
+    println!("`{}` lexed : `{:?}`", CODE, Lexer::new(CODE).lex());
 }
