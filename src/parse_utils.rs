@@ -1,9 +1,15 @@
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ArithmeticOp {
     Add,
     Subtract,
     Multiply,
     Divide,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum UnaryOp {
+    Plus,
+    Minus,
 }
 
 impl ArithmeticOp {
@@ -31,6 +37,14 @@ impl Token {
     pub fn from_int(int_str: &str) -> Token {
         Token::Int(int_str.parse::<i64>().unwrap())
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum AstNode {
+    IntLiteral(i64),
+    BinaryOp(Box<AstNode>, ArithmeticOp, Box<AstNode>),
+    UnaryOp(UnaryOp, Box<AstNode>),
+    ParenthesizedExpression(Box<AstNode>),
 }
 
 pub fn is_paren(c: &char) -> bool {
